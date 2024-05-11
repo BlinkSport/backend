@@ -16,6 +16,8 @@ router
     router.get('register', [AuthController, 'register'])
     router.post('register', [AuthController, 'handleRegister'])
     router.post('login', [AuthController, 'handleLogin'])
+    router.put('edit', [AuthController, 'handleEditAccount']).use(middleware.auth())
+    router.delete('delete', [AuthController, 'handleDeleteAccount']).use(middleware.auth())
     router.delete('logout', [AuthController, 'handleLogout']).use(middleware.auth())
   })
   .prefix('/api/auth')

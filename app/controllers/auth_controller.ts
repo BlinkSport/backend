@@ -1,14 +1,12 @@
 import User from '#models/user'
 import app from '@adonisjs/core/services/app'
-import { registerUserValidator } from '#validators/auth'
-import { loginUserValidator } from '#validators/login_user'
+import { registerUserValidator, loginUserValidator, updateUserValidator } from '#validators/auth'
 import type { HttpContext } from '@adonisjs/core/http'
 import { cuid } from '@adonisjs/core/helpers'
 import { toPng } from 'jdenticon'
 import { writeFile } from 'node:fs/promises' // Utilisez la version promise pour gérer les opérations de manière asynchrone
 import { existsSync, mkdirSync } from 'node:fs'
 import path from 'node:path'
-import { messages } from '@vinejs/vine/defaults'
 
 export default class AuthController {
   async register() {
@@ -79,6 +77,45 @@ export default class AuthController {
     })
   }
 
+  // Update
+  async handleEditAccount({ auth, request, response }: HttpContext) {
+    // Récupération de l'utilisateur authentifié (grâce à auth)
+    const user = auth.getUserOrFail()
+
+    // Récupération et validation des données de la requête avec le validateur de modification
+    const userData = await request.validateUsing(updateUserValidator)
+
+    // Traitement pour le téléchargement et la mise à jour de l'image de profil, si fournie
+    if (userData.thumbnail) {
+      const directoryPath = path.join(app.makePath('public'), 'users')
+
+      // Création du répertoire s'il n'existe pas
+      if (!existsSync(directoryPath)) {
+        mkdirSync(directoryPath, { recursive: true })
+      }
+
+      // Génération d'un nom de fichier unique pour l'image
+      const filename = `${cuid()}.${userData.thumbnail.extname}`
+      const filePath = path.join(directoryPath, filename)
+
+      // Déplacement de l'image téléchargée dans le répertoire approprié
+      await userData.thumbnail.move(directoryPath, { name: filename })
+
+      // Mise à jour du chemin de l'image dans la base de données
+      user.thumbnail = filePath
+    }
+
+    // Fusion des données validées avec l'utilisateur actuel et enregistrement des modifications
+    user.merge(userData)
+    await user.save()
+
+    // Réponse au client avec l'utilisateur mis à jour
+    return response.ok({
+      message: 'User profile updated successfully',
+      data: user,
+    })
+  }
+
   // Logout
   async handleLogout({ auth, response }: HttpContext) {
     // Récupération de l'utilisateur authentifié (grâce à auth)
@@ -96,5 +133,19 @@ export default class AuthController {
     await User.accessTokens.delete(user, token)
 
     return response.ok({ message: 'Logged out' })
+  }
+  // Delete
+  async handleDeleteAccount({ auth, response }: HttpContext) {
+    try {
+      const user = await auth.authenticate()
+      await user.delete()
+      return response.ok({ message: 'User deleted successfully' })
+    } catch (error) {
+      console.error('Failed to delete account:', error)
+
+      return response.internalServerError({
+        message: 'Failed to delete account',
+      })
+    }
   }
 }
