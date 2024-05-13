@@ -16,8 +16,8 @@ export default class AuthController {
   // Register
   async handleRegister({ request, response }: HttpContext) {
     // On récupère les informations validées
-    const { email, username, thumbnail, password } =
-      await request.validateUsing(registerUserValidator)
+    const payload = await request.validateUsing(registerUserValidator)
+    const { thumbnail, username } = payload
 
     try {
       let filePath
@@ -42,10 +42,8 @@ export default class AuthController {
 
       // Création de l'utilisateur dans la base de données
       await User.create({
-        email,
-        username,
+        ...payload,
         thumbnail: filePath,
-        password,
       })
 
       // Réponse au client
@@ -53,7 +51,7 @@ export default class AuthController {
     } catch (error) {
       console.error('Failed to process registration:', error)
       return response.status(500).json({
-        message: 'Failed to register user',
+        //message: 'Failed to register user',
         error: error.message || 'Unknow error',
       })
     }
@@ -64,76 +62,97 @@ export default class AuthController {
     // Récupération et validation des données de la requête avec le validateur de connexion
     const { email, password } = await request.validateUsing(loginUserValidator)
 
-    // Vérification des informations d'identification de l'utilisateur + récupération de l'utilisateur si valide
-    const user = await User.verifyCredentials(email, password)
+    try {
+      // Vérification des informations d'identification de l'utilisateur + récupération de l'utilisateur si valide
+      const user = await User.verifyCredentials(email, password)
 
-    // Création d'un token d'accès pour les utilisateurs authentifié
-    const token = await User.accessTokens.create(user)
+      // Création d'un token d'accès pour les utilisateurs authentifié
+      const token = await User.accessTokens.create(user)
 
-    // Réponse avec le token et les données utilisateur sérialisés
-    return response.ok({
-      token: token,
-      ...user.serialize(),
-    })
+      // Réponse avec le token et les données utilisateur sérialisés
+      return response.ok({
+        token: token,
+        ...user.serialize(),
+      })
+    } catch (error) {
+      // Réponse en cas d'erreur
+      console.error('Login Error:', error)
+      return response.unauthorized({
+        error: 'Login failed',
+      })
+    }
   }
 
   // Update
   async handleEditAccount({ auth, request, response }: HttpContext) {
-    // Récupération de l'utilisateur authentifié (grâce à auth)
-    const user = auth.getUserOrFail()
+    try {
+      // Récupération de l'utilisateur authentifié (grâce à auth)
+      const user = auth.getUserOrFail()
 
-    // Récupération et validation des données de la requête avec le validateur de modification
-    const userData = await request.validateUsing(updateUserValidator)
+      // Récupération et validation des données de la requête avec le validateur de modification
+      const userData = await request.validateUsing(updateUserValidator)
 
-    // Traitement pour le téléchargement et la mise à jour de l'image de profil, si fournie
-    if (userData.thumbnail) {
-      const directoryPath = path.join(app.makePath('public'), 'users')
+      // Traitement pour le téléchargement et la mise à jour de l'image de profil, si fournie
+      if (userData.thumbnail) {
+        const directoryPath = path.join(app.makePath('public'), 'users')
 
-      // Création du répertoire s'il n'existe pas
-      if (!existsSync(directoryPath)) {
-        mkdirSync(directoryPath, { recursive: true })
+        // Création du répertoire s'il n'existe pas
+        if (!existsSync(directoryPath)) {
+          mkdirSync(directoryPath, { recursive: true })
+        }
+
+        // Génération d'un nom de fichier unique pour l'image
+        const filename = `${cuid()}.${userData.thumbnail.extname}`
+        const filePath = path.join(directoryPath, filename)
+
+        // Déplacement de l'image téléchargée dans le répertoire approprié
+        await userData.thumbnail.move(directoryPath, { name: filename })
+
+        // Mise à jour du chemin de l'image dans la base de données
+        user.thumbnail = filePath
       }
 
-      // Génération d'un nom de fichier unique pour l'image
-      const filename = `${cuid()}.${userData.thumbnail.extname}`
-      const filePath = path.join(directoryPath, filename)
+      // Fusion des données validées avec l'utilisateur actuel et enregistrement des modifications
+      user.merge(userData)
+      await user.save()
 
-      // Déplacement de l'image téléchargée dans le répertoire approprié
-      await userData.thumbnail.move(directoryPath, { name: filename })
-
-      // Mise à jour du chemin de l'image dans la base de données
-      user.thumbnail = filePath
+      // Réponse au client avec l'utilisateur mis à jour
+      return response.ok({
+        message: 'User profile updated successfully',
+        data: user,
+      })
+    } catch (error) {
+      console.error('Edit Account Error:', error)
+      return response.unauthorized({
+        error: 'Failed to update profile',
+      })
     }
-
-    // Fusion des données validées avec l'utilisateur actuel et enregistrement des modifications
-    user.merge(userData)
-    await user.save()
-
-    // Réponse au client avec l'utilisateur mis à jour
-    return response.ok({
-      message: 'User profile updated successfully',
-      data: user,
-    })
   }
 
   // Logout
   async handleLogout({ auth, response }: HttpContext) {
-    // Récupération de l'utilisateur authentifié (grâce à auth)
-    const user = auth.getUserOrFail()
+    try {
+      // Récupération de l'utilisateur authentifié (grâce à auth)
+      const user = auth.getUserOrFail()
 
-    // Récupération du token de l'utilisateur
-    const token = auth.user?.currentAccessToken.identifier
+      // Récupération du token de l'utilisateur
+      const token = auth.user?.currentAccessToken.identifier
 
-    // Si le token n'existe pas, on renvoie une erreur
-    if (!token) {
-      return response.badRequest({ message: 'Token not found' })
+      // Si le token n'existe pas, on renvoie une erreur
+      if (!token) {
+        return response.badRequest({ message: 'Logout failed' })
+      }
+
+      // On supprime le token de l'user
+      await User.accessTokens.delete(user, token)
+
+      return response.ok({ message: 'Logged out' })
+    } catch (error) {
+      console.error('Logout Error:', error)
+      return response.unauthorized({ error: 'Failed to logout' })
     }
-
-    // On supprime le token de l'user
-    await User.accessTokens.delete(user, token)
-
-    return response.ok({ message: 'Logged out' })
   }
+
   // Delete
   async handleDeleteAccount({ auth, response }: HttpContext) {
     try {

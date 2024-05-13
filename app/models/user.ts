@@ -24,6 +24,21 @@ export default class User extends compose(BaseModel, AuthFinder) {
   declare password: string
 
   @column()
+  declare phoneNumber: string | null
+
+  @column()
+  declare biography: string | null
+
+  @column()
+  declare localisation: string
+
+  @column()
+  declare availability: string | null
+
+  @column()
+  declare status: string
+
+  @column()
   declare thumbnail: string
 
   @column.dateTime({ autoCreate: true })

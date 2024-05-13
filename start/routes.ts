@@ -11,15 +11,22 @@ import router from '@adonisjs/core/services/router'
 import { middleware } from './kernel.js'
 const AuthController = () => import('#controllers/auth_controller')
 
+// Routes ne nécessitant pas d'authentification
 router
   .group(() => {
-    router.get('register', [AuthController, 'register'])
     router.post('register', [AuthController, 'handleRegister'])
     router.post('login', [AuthController, 'handleLogin'])
-    router.put('edit', [AuthController, 'handleEditAccount']).use(middleware.auth())
-    router.delete('delete', [AuthController, 'handleDeleteAccount']).use(middleware.auth())
-    router.delete('logout', [AuthController, 'handleLogout']).use(middleware.auth())
   })
+  .prefix('/api/auth')
+
+// Routes nécessitant une authentification
+router
+  .group(() => {
+    router.put('edit', [AuthController, 'handleEditAccount'])
+    router.delete('delete', [AuthController, 'handleDeleteAccount'])
+    router.delete('logout', [AuthController, 'handleLogout'])
+  })
+  .use(middleware.auth())
   .prefix('/api/auth')
 
 // Route accessible uniquement par les users authentiifiés
