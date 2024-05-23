@@ -22,6 +22,7 @@ router
 // Routes nécessitant une authentification
 router
   .group(() => {
+    router.get('get', [AuthController, 'getUserProfile'])
     router.put('edit', [AuthController, 'handleEditAccount'])
     router.delete('delete', [AuthController, 'handleDeleteAccount'])
     router.delete('logout', [AuthController, 'handleLogout'])

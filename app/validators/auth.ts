@@ -44,7 +44,12 @@ export const updateUserValidator = vine.compile(
     biography: vine.string().escape().trim().optional(),
     localisation: vine.string().trim().escape().optional(),
     availability: vine.string().escape().optional(),
-    status: vine.enum(['aveugle', 'malvoyant', 'bénévole', 'coach sportif']),
+    status: vine.enum(['aveugle', 'malvoyant', 'bénévole', 'coach sportif']).optional(),
     thumbnail: vine.file({ extnames: ['jpg', 'png'], size: '10mb' }).optional(),
+    phoneNumber: vine
+      .string()
+      .alphaNumeric()
+      .regex(/^(06|07)[0-9]{8}$/)
+      .optional(),
   })
 )
