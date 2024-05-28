@@ -10,6 +10,7 @@
 import router from '@adonisjs/core/services/router'
 import { middleware } from './kernel.js'
 const AuthController = () => import('#controllers/auth_controller')
+const UserSportsController = () => import('#controllers/user_favorite_sports_controller')
 
 // Routes ne nécessitant pas d'authentification
 router
@@ -32,12 +33,11 @@ router
 
 // Route accessible uniquement par les users authentiifiés
 router
-  .get('protected', async ({ auth, response }) => {
-    try {
-      const user = auth.getUserOrFail()
-      return response.ok(user)
-    } catch (error) {
-      return response.unauthorized({ error: 'User not found' })
-    }
+  .group(() => {
+    router.get('get', [UserSportsController, 'index'])
+    router.post('add', [UserSportsController, 'store'])
+    router.put('update', [UserSportsController, 'update'])
+    router.delete('delete', [UserSportsController, 'destroy'])
   })
   .use(middleware.auth())
+  .prefix('api/user/lovedsports')

@@ -1,9 +1,11 @@
 import { DateTime } from 'luxon'
 import hash from '@adonisjs/core/services/hash'
 import { compose } from '@adonisjs/core/helpers'
-import { BaseModel, column } from '@adonisjs/lucid/orm'
+import { BaseModel, column, hasMany } from '@adonisjs/lucid/orm'
+import type { HasMany } from '@adonisjs/lucid/types/relations'
 import { withAuthFinder } from '@adonisjs/auth/mixins/lucid'
 import { DbAccessTokensProvider } from '@adonisjs/auth/access_tokens'
+import SportLovedByUser from '#models/sport_loved_by_user'
 
 const AuthFinder = withAuthFinder(() => hash.use('scrypt'), {
   uids: ['email'],
@@ -40,6 +42,10 @@ export default class User extends compose(BaseModel, AuthFinder) {
 
   @column()
   declare thumbnail: string
+
+  //Indique qu'un utilisateur peut aimer plusieurs sports
+  @hasMany(() => SportLovedByUser)
+  declare lovedSports: HasMany<typeof SportLovedByUser>
 
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
