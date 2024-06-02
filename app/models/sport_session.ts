@@ -46,6 +46,6 @@ export default class SportSession extends BaseModel {
   @belongsTo(() => Notification, { foreignKey: 'target_id' })
   declare notification: BelongsTo<typeof Notification>
 
-  @hasMany(() => SessionMember)
-  declare member: HasMany<typeof SessionMember>
+  @hasMany(() => SessionMember, { foreignKey: 'sessionId' })
+  declare members: HasMany<typeof SessionMember>
 }

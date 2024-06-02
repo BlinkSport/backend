@@ -15,12 +15,12 @@ export const storeSportSessionValidator = vine.compile(
     isCanceled: vine.boolean().optional(),
   })
 )
-// export const updateSportSessionValidator = vine.object({
-//   session_status: vine.enum(['pending', 'offered', 'completed', 'cancelled']).optional(),
-//   start_date: vine.date().optional(),
-//   //sport_session_name: vine.string().optional(),
-//   difficulty_level: vine.enum(['débutant', 'amateur', 'confirmé']).optional(),
-//   location: vine.string().optional(),
-//   number_of_participants: vine.number().positive().optional(),
-//   only_blind_or_visually_impaired: vine.boolean().optional(),
-// })
+
+export const updateSportSessionValidator = vine.compile(
+  vine.object({
+    sessionId: vine.number().positive().optional(),
+    startDate: vine.date().optional(),
+    sportId: vine.number().positive().optional(),
+    location: vine.string().optional(),
+  })
+)

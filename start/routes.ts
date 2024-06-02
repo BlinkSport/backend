@@ -50,8 +50,8 @@ router
   .group(() => {
     router.get('get', [SportSessionsController, 'index'])
     router.post('create', [SportSessionsController, 'store'])
-    // router.put('update', [SportSessionsController, 'update'])
-    // router.delete('delete', [SportSessionsController, 'destroy'])
+    router.put('update', [SportSessionsController, 'update'])
+    router.delete('delete', [SportSessionsController, 'destroy'])
   })
   .use(middleware.auth())
   .prefix('api/sport-session')
