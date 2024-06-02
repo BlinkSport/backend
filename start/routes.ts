@@ -11,6 +11,9 @@ import router from '@adonisjs/core/services/router'
 import { middleware } from './kernel.js'
 const AuthController = () => import('#controllers/auth_controller')
 const UserSportsController = () => import('#controllers/user_favorite_sports_controller')
+const SportSessionsController = () => import('#controllers/sport_sessions_controller')
+const FriendshipsController = () => import('#controllers/friendships_controller')
+const HandleSessionMembersController = () => import('#controllers/session_members_controller')
 
 // Routes ne nécessitant pas d'authentification
 router
@@ -31,7 +34,7 @@ router
   .use(middleware.auth())
   .prefix('/api/auth')
 
-// Route accessible uniquement par les users authentiifiés
+// Route pour gérer ses sports préférés
 router
   .group(() => {
     router.get('get', [UserSportsController, 'index'])
@@ -41,3 +44,35 @@ router
   })
   .use(middleware.auth())
   .prefix('api/user/lovedsports')
+
+// Route pour gérer les sessions de sports
+router
+  .group(() => {
+    router.get('get', [SportSessionsController, 'index'])
+    router.post('create', [SportSessionsController, 'store'])
+    // router.put('update', [SportSessionsController, 'update'])
+    // router.delete('delete', [SportSessionsController, 'destroy'])
+  })
+  .use(middleware.auth())
+  .prefix('api/sport-session')
+
+router
+  .group(() => {
+    router.post('join', [HandleSessionMembersController, 'joinSession'])
+    router.post('accept-member', [HandleSessionMembersController, 'acceptNewMember'])
+    router.delete('delete-user', [HandleSessionMembersController, 'deleteUser'])
+  })
+  .use(middleware.auth())
+  .prefix('api/sport-session')
+
+// Route pour gérer la liste d'amis
+router
+  .group(() => {
+    router.get('all-friends', [FriendshipsController, 'getAllFriends'])
+    router.get('received-requests', [FriendshipsController, 'getReceivedFriendRequests'])
+    router.post('send-request/', [FriendshipsController, 'friendshipRequest'])
+    router.post('accept-friend/', [FriendshipsController, 'acceptFriendRequest'])
+    router.delete('delete/', [FriendshipsController, 'deleteFriend'])
+  })
+  .use(middleware.auth())
+  .prefix('api/friendship')

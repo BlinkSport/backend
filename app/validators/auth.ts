@@ -20,11 +20,10 @@ export const registerUserValidator = vine.compile(
       .alphaNumeric()
       .regex(/^(06|07)[0-9]{8}$/), // Valide que le numéro contient exactement 10 chiffres
     biography: vine.string().escape().trim().optional(),
-    localisation: vine.string().trim().escape(),
+    location: vine.string().trim().escape(),
     availability: vine.string().escape().optional(),
-    status: vine.enum(['aveugle', 'malvoyant', 'bénévole', 'coach sportif']),
-    //status: vine.string().validateUsing(statusValidator).notNullable(),
-    thumbnail: vine.file({ extnames: ['jpg', 'png'], size: '10mb' }).optional(),
+    status: vine.enum(['aveugle', 'malvoyant', 'bénévole']),
+    profilImage: vine.file({ extnames: ['jpg', 'png'], size: '10mb' }).optional(),
   })
 )
 
@@ -42,10 +41,10 @@ export const updateUserValidator = vine.compile(
   vine.object({
     username: vine.string().escape().trim().minLength(3).alphaNumeric().optional(),
     biography: vine.string().escape().trim().optional(),
-    localisation: vine.string().trim().escape().optional(),
+    location: vine.string().trim().escape().optional(),
     availability: vine.string().escape().optional(),
-    status: vine.enum(['aveugle', 'malvoyant', 'bénévole', 'coach sportif']).optional(),
-    thumbnail: vine.file({ extnames: ['jpg', 'png'], size: '10mb' }).optional(),
+    status: vine.enum(['aveugle', 'malvoyant', 'bénévole']).optional(),
+    profilImage: vine.file({ extnames: ['jpg', 'png'], size: '10mb' }).optional(),
     phoneNumber: vine
       .string()
       .alphaNumeric()

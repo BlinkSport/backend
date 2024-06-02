@@ -22,12 +22,12 @@ export default class AuthController {
 
     // On récupère les informations validées
     const payload = await request.validateUsing(registerUserValidator)
-    const { thumbnail, username } = payload
+    const { profilImage, username } = payload
 
     try {
       let imageUrl
 
-      if (!thumbnail) {
+      if (!profilImage) {
         // On génère une icône par défaut et l'enregistre
         const png = toPng(username, 100)
         const filename = `${username}_${cuid()}.png`
@@ -37,17 +37,17 @@ export default class AuthController {
         imageUrl = await uploadImageToS3(tempFilePath, bucketName, filename)
         await unlink(tempFilePath) // Supprime le fichier temporaire après l'upload
       } else {
-        // Gérer l'upload de l'image de thumbnail
-        const filename = `${cuid()}_${Date.now()}.${thumbnail.extname}` // On génère un nom unique
+        // Gérer l'upload de l'image de profilImage
+        const filename = `${cuid()}_${Date.now()}.${profilImage.extname}` // On génère un nom unique
         const tempFilePath = `public/users/${filename}`
-        await thumbnail.move(app.makePath('public/users'), { name: filename })
+        await profilImage.move(app.makePath('public/users'), { name: filename })
         imageUrl = await uploadImageToS3(tempFilePath, bucketName, filename)
       }
 
       // Création de l'utilisateur dans la base de données
       await User.create({
         ...payload,
-        thumbnail: imageUrl,
+        profilImage: imageUrl,
       })
 
       // Réponse au client
@@ -111,25 +111,25 @@ export default class AuthController {
       // Récupération et validation des données de la requête avec le validateur de modification
       const userData = await request.validateUsing(updateUserValidator)
       // Initialise la variable imageUrl avec la valeur actuelle de la miniature de l'utilisateur
-      let imageUrl = user.thumbnail
+      let imageUrl = user.profilImage
 
       // Vérifie si une nouvelle miniature a été fournie dans les données de la requête
-      if (userData.thumbnail) {
+      if (userData.profilImage) {
         // Récupère la miniature des données de la requête
-        const thumbnail = userData.thumbnail
+        const profilImage = userData.profilImage
         // Génère un nom de fichier unique pour la miniature
-        const filename = `${cuid()}_${Date.now()}.${thumbnail.extname}`
+        const filename = `${cuid()}_${Date.now()}.${profilImage.extname}`
         // Détermine le chemin temporaire où la miniature sera stockée
         const tempFilePath = `public/users/${filename}`
         // Déplace la miniature téléchargée vers le répertoire public/users avec le nom de fichier généré
-        await thumbnail.move(app.makePath('public/users'), { name: filename })
+        await profilImage.move(app.makePath('public/users'), { name: filename })
         // Télécharge la miniature vers AWS S3 et récupère l'URL de l'image
         imageUrl = await uploadImageToS3(tempFilePath, bucketName, filename)
         // Supprime le fichier temporaire après l'upload vers S3
         await unlink(tempFilePath)
       }
       // Fusionne les données validées avec l'utilisateur actuel et met à jour l'URL de la miniature
-      user.merge({ ...userData, thumbnail: imageUrl })
+      user.merge({ ...userData, profilImage: imageUrl })
       // Enregistre les modifications apportées à l'utilisateur dans la base de données
       await user.save()
 
