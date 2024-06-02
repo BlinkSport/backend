@@ -10,9 +10,9 @@ export default class extends BaseSeeder {
         email: 'virk@adonisjs.com',
         password: '12345678',
         phoneNumber: '0611111111',
+        age: 16,
         biography: 'je suis gentil',
         location: 'Usa',
-        availability: '16h-17h',
         status: 'bénévole',
       },
       {
@@ -20,9 +20,9 @@ export default class extends BaseSeeder {
         email: 'tefjb@adonisjs.com',
         password: 'secpooit1239',
         phoneNumber: '0622222222',
+        age: 20,
         biography: 'je suis méchant',
         location: 'Paris',
-        availability: '16h-17h',
         status: 'aveugle',
       },
       {
@@ -30,9 +30,9 @@ export default class extends BaseSeeder {
         email: 'uert@adonisjs.com',
         password: 'secret123',
         phoneNumber: '0611111111',
+        age: 36,
         biography: "j'aime le sport",
         location: 'Pérou',
-        availability: '16h-17h',
         status: 'malvoyant',
       },
       {
@@ -40,9 +40,9 @@ export default class extends BaseSeeder {
         email: 'seda@adonisjs.com',
         password: 'sret123jhy',
         phoneNumber: '0687968574',
+        age: 25,
         biography: 'je suis gentil aussi',
         location: 'Brésil',
-        availability: '16h-17h',
         status: 'bénévole',
       },
     ])

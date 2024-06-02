@@ -11,10 +11,10 @@ export default class extends BaseSchema {
       table.string('email', 254).notNullable().unique()
       table.string('password').notNullable()
       table.string('phone_number').nullable()
+      table.integer('age').notNullable()
       table.string('biography').nullable()
       table.string('location').notNullable()
-      table.text('availability').nullable()
-      table.string('status').defaultTo('bénévole')
+      table.string('status').defaultTo('aveugle')
       table.string('profil_image').nullable()
 
       table.timestamp('created_at').notNullable()

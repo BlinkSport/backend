@@ -31,13 +31,13 @@ export default class User extends compose(BaseModel, AuthFinder) {
   declare phoneNumber: string | null
 
   @column()
+  declare age: number
+
+  @column()
   declare biography: string | null
 
   @column()
   declare location: string
-
-  @column()
-  declare availability: string | null
 
   @column()
   declare status: string

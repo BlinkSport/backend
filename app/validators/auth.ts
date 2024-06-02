@@ -19,6 +19,7 @@ export const registerUserValidator = vine.compile(
       .string()
       .alphaNumeric()
       .regex(/^(06|07)[0-9]{8}$/), // Valide que le numéro contient exactement 10 chiffres
+    age: vine.number().withoutDecimals().optional(),
     biography: vine.string().escape().trim().optional(),
     location: vine.string().trim().escape(),
     availability: vine.string().escape().optional(),
@@ -40,6 +41,7 @@ export const loginUserValidator = vine.compile(
 export const updateUserValidator = vine.compile(
   vine.object({
     username: vine.string().escape().trim().minLength(3).alphaNumeric().optional(),
+    age: vine.number().withoutDecimals().optional(),
     biography: vine.string().escape().trim().optional(),
     location: vine.string().trim().escape().optional(),
     availability: vine.string().escape().optional(),

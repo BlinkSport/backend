@@ -17,7 +17,7 @@ export default class SportSession extends BaseModel {
   declare sportId: number
 
   @column()
-  declare numberOfMembers: number
+  declare maxParticipants: number
 
   @column()
   declare onlyBlindOrVisuallyImpaired: boolean
@@ -30,6 +30,9 @@ export default class SportSession extends BaseModel {
 
   @column()
   declare isPrivate: boolean
+
+  @column()
+  declare isCanceled: boolean
 
   @column.dateTime({ autoCreate: true })
   declare created_At: DateTime

@@ -2,15 +2,17 @@ import vine from '@vinejs/vine'
 
 export const storeSportSessionValidator = vine.compile(
   vine.object({
-    startDate: vine.date({
-      format: 'yyyy-MM-dd HH:mm:ss',
-    }),
+    // startDate: vine.date({
+    //   format: 'yyyy-MM-dd HH:mm:ss',
+    // }),
+    startDate: vine.date(),
     sportId: vine.number().positive(),
-    numberOfMembers: vine.number().positive(),
+    maxParticipants: vine.number().withoutDecimals().positive(),
     onlyBlindOrVisuallyImpaired: vine.boolean().optional(),
-    difficultyLevel: vine.enum(['débutant', 'amateur', 'confirmé']),
+    difficultyLevel: vine.enum(['aucun', 'débutant', 'intérmédiaire', 'confirmé']),
     location: vine.string(),
     isPrivate: vine.boolean().optional(),
+    isCanceled: vine.boolean().optional(),
   })
 )
 // export const updateSportSessionValidator = vine.object({
