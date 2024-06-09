@@ -1,7 +1,7 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import Friendship from '#models/friendship'
 import User from '#models/user'
-import Status from '../enums/status.js'
+import Status from '../enums/friendship.js'
 //import Friendships from '#models/friendships'
 
 export default class FriendshipsController {

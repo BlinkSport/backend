@@ -19,7 +19,10 @@ export default class User extends compose(BaseModel, AuthFinder) {
   declare id: number
 
   @column()
-  declare username: string
+  declare lastname: string
+
+  @column()
+  declare firstname: string
 
   @column()
   declare email: string
@@ -31,7 +34,7 @@ export default class User extends compose(BaseModel, AuthFinder) {
   declare phoneNumber: string | null
 
   @column()
-  declare age: number
+  declare birthdate: Date
 
   @column()
   declare biography: string | null

@@ -32,7 +32,7 @@ export default class SportSession extends BaseModel {
   declare isPrivate: boolean
 
   @column()
-  declare isCanceled: boolean
+  declare status: string
 
   @column.dateTime({ autoCreate: true })
   declare created_At: DateTime

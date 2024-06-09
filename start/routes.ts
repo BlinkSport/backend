@@ -10,7 +10,7 @@
 import router from '@adonisjs/core/services/router'
 import { middleware } from './kernel.js'
 const AuthController = () => import('#controllers/auth_controller')
-const UserSportsController = () => import('#controllers/user_favorite_sports_controller')
+const UserFavoriteSportsController = () => import('#controllers/user_favorite_sports_controller')
 const SportSessionsController = () => import('#controllers/sport_sessions_controller')
 const FriendshipsController = () => import('#controllers/friendships_controller')
 const HandleSessionMembersController = () => import('#controllers/session_members_controller')
@@ -37,10 +37,10 @@ router
 // Route pour gérer ses sports préférés
 router
   .group(() => {
-    router.get('get', [UserSportsController, 'index'])
-    router.post('add', [UserSportsController, 'store'])
-    router.put('update', [UserSportsController, 'update'])
-    router.delete('delete', [UserSportsController, 'destroy'])
+    router.get('get', [UserFavoriteSportsController, 'index'])
+    router.post('add', [UserFavoriteSportsController, 'store'])
+    router.put('update', [UserFavoriteSportsController, 'update'])
+    router.delete('delete', [UserFavoriteSportsController, 'destroy'])
   })
   .use(middleware.auth())
   .prefix('api/user/lovedsports')
@@ -61,6 +61,7 @@ router
     router.post('join', [HandleSessionMembersController, 'joinSession'])
     router.post('accept-member', [HandleSessionMembersController, 'acceptNewMember'])
     router.delete('delete-user', [HandleSessionMembersController, 'deleteUser'])
+    router.delete('leave', [HandleSessionMembersController, 'leave'])
   })
   .use(middleware.auth())
   .prefix('api/sport-session')

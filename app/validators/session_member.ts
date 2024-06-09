@@ -20,3 +20,8 @@ export const acceptNewMemberValidator = vine.compile(
     SessionMemberId: vine.number().positive(),
   })
 )
+export const leaveSessionValidator = vine.compile(
+  vine.object({
+    sessionId: vine.number().positive(),
+  })
+)

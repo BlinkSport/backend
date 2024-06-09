@@ -61,7 +61,8 @@
     "jdenticon": "^3.2.0",
     "luxon": "^3.4.4",
     "pg": "^8.11.5",
-    "reflect-metadata": "^0.2.2"
+    "reflect-metadata": "^0.2.2",
+    "stream-chat": "^8.35.0"
   },
   "hotHook": {
     "boundaries": [

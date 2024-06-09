@@ -1,4 +1,6 @@
 import vine from '@vinejs/vine'
+import Status from '../enums/sport_session.js'
+import Level from '../enums/difficulty_level.js'
 
 export const storeSportSessionValidator = vine.compile(
   vine.object({
@@ -9,10 +11,12 @@ export const storeSportSessionValidator = vine.compile(
     sportId: vine.number().positive(),
     maxParticipants: vine.number().withoutDecimals().positive(),
     onlyBlindOrVisuallyImpaired: vine.boolean().optional(),
-    difficultyLevel: vine.enum(['aucun', 'débutant', 'intérmédiaire', 'confirmé']),
+    difficultyLevel: vine
+      .enum([Level.AUCUN, Level.DEBUTANT, Level.INTERMEDIAIRE, Level.HAUTNIVEAU])
+      .optional(),
     location: vine.string(),
     isPrivate: vine.boolean().optional(),
-    isCanceled: vine.boolean().optional(),
+    status: vine.enum([Status.PENDING, Status.FINISH, Status.CANCELED]).optional(),
   })
 )
 

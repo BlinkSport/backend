@@ -22,15 +22,15 @@ export default class AuthController {
 
     // On récupère les informations validées
     const payload = await request.validateUsing(registerUserValidator)
-    const { profilImage, username } = payload
+    const { profilImage, firstname } = payload
 
     try {
       let imageUrl
 
       if (!profilImage) {
         // On génère une icône par défaut et l'enregistre
-        const png = toPng(username, 100)
-        const filename = `${username}_${cuid()}.png`
+        const png = toPng(firstname, 100)
+        const filename = `${firstname}_${cuid()}.png`
         const tempFilePath = `public/users/${filename}`
         // Enregistre l'image par défaut dans un fichier temporaire
         await writeFile(tempFilePath, png)
@@ -80,9 +80,7 @@ export default class AuthController {
     } catch (error) {
       // Réponse en cas d'erreur
       console.error('Login Error:', error)
-      return response.unauthorized({
-        error: 'Login failed',
-      })
+      return response.badRequest({ error: error.messages })
     }
   }
 
