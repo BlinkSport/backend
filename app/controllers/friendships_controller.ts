@@ -2,6 +2,9 @@ import type { HttpContext } from '@adonisjs/core/http'
 import Friendship from '#models/friendship'
 import User from '#models/user'
 import Status from '../enums/friendship.js'
+import { StreamChat } from 'stream-chat'
+import { cuid } from '@adonisjs/core/helpers'
+import env from '#start/env'
 //import Friendships from '#models/friendships'
 
 export default class FriendshipsController {
@@ -133,6 +136,27 @@ export default class FriendshipsController {
       // On met à jour le statut de la demande à ACCEPTED
       friendship.status = Status.ACCEPTED
       await friendship.save()
+
+      // On récupère la clé et le secret de l'API stream
+      const streamApiKey = env.get('STREAM_API_KEY')
+      const streamApiSecret = env.get('STREAM_API_SECRET')
+
+      if (!streamApiKey || !streamApiSecret) {
+        throw new Error(
+          'STREAM_API_KEY or STREAM_API_SECRET is not defined in environment variables.'
+        )
+      }
+
+      // Création d'une instance du client StreamChat avec les clés API
+      const chatClient = StreamChat.getInstance(streamApiKey, streamApiSecret)
+
+      const channelId = `friends-${cuid()}`
+      const channel = chatClient.channel('messaging', channelId, {
+        created_by_id: receiverUserId.toString(),
+        members: [senderUserId.toString(), receiverUserId.toString()],
+      })
+
+      await channel.create()
 
       return response.ok({ message: 'Friend request accepted' })
     } catch (error) {
