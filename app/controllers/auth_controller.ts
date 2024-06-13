@@ -138,6 +138,11 @@ export default class AuthController {
   }
   async checkEmail({ request, response }: HttpContext) {
     const emailUserToCheck = request.input('email')
+    console.log('Email to check:', emailUserToCheck)
+
+    if (!emailUserToCheck) {
+      return response.badRequest({ error: 'Email is required' })
+    }
 
     try {
       const emailUserInDatabase = await User.findBy('email', emailUserToCheck)
