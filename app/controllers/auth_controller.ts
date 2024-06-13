@@ -85,14 +85,22 @@ export default class AuthController {
 
   // Login
   async handleLogin({ request, response }: HttpContext) {
-    // Récupération et validation des données de la requête avec le validateur de connexion
-    const { email, password } = await request.validateUsing(loginUserValidator)
-
     try {
-      // Vérification des informations d'identification de l'utilisateur + récupération de l'utilisateur si valide
-      const user = await User.verifyCredentials(email, password)
+      // Récupération et validation des données de la requête avec le validateur de connexion
+      const { email, password } = await request.validateUsing(loginUserValidator)
 
-      // Création d'un token d'accès pour les utilisateurs authentifié
+      let user
+      try {
+        // Vérification des informations d'identification de l'utilisateur + récupération de l'utilisateur si valide
+        user = await User.verifyCredentials(email, password)
+      } catch (error) {
+        if (error.code === 'E_INVALID_CREDENTIALS') {
+          return response.badRequest({ error: 'Email ou mot de passe incorrect' })
+        }
+        throw error // Relancer l'erreur si ce n'est pas une erreur d'identifiants invalides
+      }
+
+      // Création d'un token d'accès pour les utilisateurs authentifiés
       const token = await User.accessTokens.create(user)
 
       // On récupère le token stream de l'utilisateur
@@ -103,12 +111,19 @@ export default class AuthController {
         token: token,
         ...user.serialize(),
         streamToken,
-        streamApiKey: streamApiKey,
+        streamApiKey: process.env.STREAM_API_KEY, // Assurez-vous que cette variable d'environnement est définie
       })
     } catch (error) {
       // Réponse en cas d'erreur
       console.error('Login Error:', error)
-      return response.badRequest({ error: error.messages })
+
+      // Si l'erreur est une instance de ValidationException, renvoyer des messages d'erreur détaillés
+      if (error.messages) {
+        return response.badRequest({ error: error.messages })
+      }
+
+      // Autres erreurs
+      return response.badRequest({ error: "Une erreur s'est produite lors de la connexion." })
     }
   }
 
@@ -121,6 +136,22 @@ export default class AuthController {
       return response.unauthorized({ error: 'User not authenticated' })
     }
   }
+  async checkEmail({ request, response }: HttpContext) {
+    const emailUserToCheck = request.input('email')
+
+    try {
+      const emailUserInDatabase = await User.findBy('email', emailUserToCheck)
+      if (emailUserInDatabase) {
+        return response.ok({ exists: true })
+      } else {
+        return response.ok({ exists: false })
+      }
+    } catch (error) {
+      console.error('Email check error:', error)
+      return response.internalServerError({ error: 'Failed to check email' })
+    }
+  }
+
   // Update
   async handleEditAccount({ auth, request, response }: HttpContext) {
     const bucketName = env.get('AWS_BUCKET_NAME')

@@ -39,11 +39,12 @@ const messagesProvider = new SimpleMessagesProvider(
     'lastname.required': 'Votre nom est obligatoire.',
     'firstname.required': 'Votre prénom est obligatoire.',
     'email.required': 'Votre email est obligatoire.',
+    'email.unique': 'Cet email est déjà associé à un autre compte.',
     'password.required': 'Votre mot de passe est obligatoire.',
     'password.minlenght': 'Votre mot de passe doit contenir au moins 8 caractères',
     'phoneNumber.required': 'Votre numéro de téléphone est obligatoire.',
     'location.required': 'Vous devez renseigner votre localisation.',
-    'status.required': 'Vous devez renseigner votre statut.',
+    'status.required': 'Vous devez renseigner le statut de votre compte.',
     'profilImage.file': 'Seule les images de type jpg et png sont acceptées.',
   },
   fields

@@ -27,6 +27,7 @@ router
 router
   .group(() => {
     router.get('get', [AuthController, 'getUserProfile'])
+    router.post('check-email', [AuthController, 'checkEmail'])
     router.put('edit', [AuthController, 'handleEditAccount'])
     router.delete('delete', [AuthController, 'handleDeleteAccount'])
     router.delete('logout', [AuthController, 'handleLogout'])

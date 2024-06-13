@@ -43,6 +43,12 @@ export default class User extends compose(BaseModel, AuthFinder) {
   declare location: string
 
   @column()
+  declare latitude?: number
+
+  @column()
+  declare longitude?: number
+
+  @column()
   declare status: string
 
   @column()

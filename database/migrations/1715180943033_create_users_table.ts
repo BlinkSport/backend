@@ -16,6 +16,8 @@ export default class extends BaseSchema {
       table.date('birthdate').nullable()
       table.string('biography').nullable()
       table.string('location').nullable()
+      table.float('latitude').nullable()
+      table.float('longitude').nullable()
       table.string('status').defaultTo(UserStatus.AVEUGLE)
       table.string('profil_image').nullable()
 
