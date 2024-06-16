@@ -56,10 +56,23 @@ export default class AuthController {
         imageUrl = await uploadImageToS3(tempFilePath, bucketName, filename)
       }
 
+      // Log pour débogage
+      console.log('Payload received:', payload)
+
+      // Création du point géographique à partir des coordonnées latitude et longitude
+      if (!payload.latitude || !payload.longitude) {
+        return response.badRequest({ message: 'Latitude and longitude are required' })
+      }
+      const geoLocationPoint = `POINT(${payload.longitude} ${payload.latitude})`
+
+      // Log pour débogage
+      console.log('Geolocation point:', geoLocationPoint)
+
       // Création de l'utilisateur dans la base de données
       const user = await User.create({
         ...payload,
         profilImage: imageUrl,
+        geoLocationPoint,
       })
 
       // On enregistre l'utilisateur sur Stream
@@ -111,7 +124,7 @@ export default class AuthController {
         token: token,
         ...user.serialize(),
         streamToken,
-        streamApiKey: process.env.STREAM_API_KEY, // Assurez-vous que cette variable d'environnement est définie
+        streamApiKey: process.env.STREAM_API_KEY,
       })
     } catch (error) {
       // Réponse en cas d'erreur
@@ -141,7 +154,7 @@ export default class AuthController {
     console.log('Email to check:', emailUserToCheck)
 
     if (!emailUserToCheck) {
-      return response.badRequest({ error: 'Email is required' })
+      return response.badRequest({ error: 'Votre email est obligatoire' })
     }
 
     try {

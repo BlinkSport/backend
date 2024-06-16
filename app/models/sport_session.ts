@@ -11,7 +11,7 @@ export default class SportSession extends BaseModel {
   declare id: number
 
   @column()
-  declare startDate: Date
+  declare startDate: DateTime
 
   @column()
   declare sportId: number
@@ -26,7 +26,19 @@ export default class SportSession extends BaseModel {
   declare difficultyLevel: string
 
   @column()
+  declare description: string
+
+  @column()
   declare location: string
+
+  @column()
+  declare latitude: number
+
+  @column()
+  declare longitude: number
+
+  @column({ serializeAs: null })
+  declare geoLocationPoint: any
 
   @column()
   declare isPrivate: boolean

@@ -1,7 +1,7 @@
 enum UserStatus {
   AVEUGLE = 'aveugle',
   MALVOYANT = 'malvoyant',
-  VALIDE = 'valide',
+  VALIDE = 'voyant',
   PARENT = 'parent',
 }
 

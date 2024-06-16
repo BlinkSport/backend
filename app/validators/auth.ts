@@ -52,8 +52,8 @@ const messagesProvider = new SimpleMessagesProvider(
 
 // On valide les données fournies par le formulaire d'inscription
 const registerSchema = vine.object({
-  lastname: vine.string().escape().trim().minLength(3).alphaNumeric().optional(),
-  firstname: vine.string().escape().trim().minLength(3).alphaNumeric().optional(),
+  lastname: vine.string().escape().trim().minLength(3).alphaNumeric(),
+  firstname: vine.string().escape().trim().minLength(3).alphaNumeric(),
   email: vine
     .string()
     .email()
@@ -69,11 +69,16 @@ const registerSchema = vine.object({
     .optional(),
   birthdate: vine.date().optional(),
   biography: vine.string().escape().trim().optional(),
-  location: vine.string().trim().escape().optional(),
+  location: vine.string().trim().escape(),
+  latitude: vine.number().min(-90).max(90),
+  longitude: vine.number().min(-180).max(180),
   availability: vine.string().escape().optional(),
-  status: vine
-    .enum([UserStatus.AVEUGLE, UserStatus.MALVOYANT, UserStatus.VALIDE, UserStatus.PARENT])
-    .optional(),
+  status: vine.enum([
+    UserStatus.AVEUGLE,
+    UserStatus.MALVOYANT,
+    UserStatus.VALIDE,
+    UserStatus.PARENT,
+  ]),
   profilImage: vine.file({ extnames: ['jpg', 'png'], size: '10mb' }).optional(),
 })
 

@@ -14,7 +14,9 @@ export default class extends BaseSeeder {
         // birthdate: new Date('1998-02-03'),
         biography: 'je suis gentil',
         location: 'Usa',
-        status: 'bénévole',
+        latitude: 45,
+        longitude: 18,
+        status: 'voyant',
       },
       {
         lastname: 'Jhon',
@@ -25,6 +27,8 @@ export default class extends BaseSeeder {
         // birthdate: new Date('1998-02-04'),
         biography: 'je suis méchant',
         location: 'Paris',
+        latitude: 45,
+        longitude: 18,
         status: 'aveugle',
       },
       {
@@ -36,6 +40,8 @@ export default class extends BaseSeeder {
         // birthdate: new Date('1998-02-04'),
         biography: "j'aime le sport",
         location: 'Pérou',
+        latitude: 45,
+        longitude: 18,
         status: 'malvoyant',
       },
       {
@@ -47,6 +53,8 @@ export default class extends BaseSeeder {
         // birthdate: new Date('1998-02-04'),
         biography: 'je suis gentil aussi',
         location: 'Brésil',
+        latitude: 45,
+        longitude: 18,
         status: 'parent',
       },
       {
@@ -58,7 +66,9 @@ export default class extends BaseSeeder {
         // birthdate: new Date('1998-02-85'),
         biography: 'je suis neutre',
         location: 'Stockolm',
-        status: 'bénévole',
+        latitude: 45,
+        longitude: 18,
+        status: 'voyant',
       },
     ])
   }

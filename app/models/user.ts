@@ -48,6 +48,9 @@ export default class User extends compose(BaseModel, AuthFinder) {
   @column()
   declare longitude?: number
 
+  @column({ serializeAs: null })
+  declare geoLocationPoint: any
+
   @column()
   declare status: string
 
