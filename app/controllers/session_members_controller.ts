@@ -1,14 +1,14 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import SportSession from '#models/sport_session'
 import SessionMember from '#models/session_member'
-import { joinSportSessionValidator, acceptNewMemberValidator } from '#validators/session_member'
+import {
+  joinSportSessionValidator,
+  acceptNewMemberValidator,
+  leaveSessionValidator,
+} from '#validators/session_member'
+import Status from '../enums/sport_session.js'
 
 export default class HandleSessionMembersController {
-  /**
-   * Display a list of resource
-   */
-  async index({}: HttpContext) {}
-
   /**
    * Handle form submission for the create action
    */
@@ -173,4 +173,90 @@ export default class HandleSessionMembersController {
       return response.badGateway({ message: error.message })
     }
   }
+
+  /**
+   * Quitter une session
+   */
+  async leave({ request, auth, response }: HttpContext) {
+    const userId = auth.user?.id
+
+    if (!userId) {
+      return response.unauthorized({ message: 'User not authenticated' })
+    }
+
+    try {
+      // Validation des données entrantes
+      const { sessionId } = await request.validateUsing(leaveSessionValidator)
+
+      // On récupère la ligne qu'on veut modifié
+      const sessionMember = await SessionMember.query()
+        .where('sessionId', sessionId)
+        .andWhere('userId', userId)
+        .first()
+
+      // On vérifie que l'utilisateur fait partie de la session
+      if (!sessionMember) {
+        return response.notFound({ message: 'Vous ne faites pas partie de cette session.' })
+      }
+
+      // Supprime l'utilisateur de la session et stocke si l'utilisateur était administrateur
+      const isAdmin = sessionMember.isAdmin
+      await sessionMember.delete()
+
+      // On récupère les membres restant de la session
+      const remainingMembers = await SessionMember.query()
+        .where('sessionId', sessionId)
+        .andWhere('isAccepted', true)
+        .orderBy('created_at', 'asc')
+
+      // Si l'utilisateur qui quitte est l'administrateur, promouvoir le membre suivant
+      if (isAdmin && remainingMembers.length > 0) {
+        const nextAdmin = remainingMembers[0]
+        nextAdmin.isAdmin = true
+        await nextAdmin.save()
+      }
+
+      // Annuler la session si le nombre de membres est inférieur à 2
+      if (remainingMembers.length < 2) {
+        const sportSession = await SportSession.findOrFail(sessionId)
+        sportSession.status = Status.CANCELED
+        await sportSession.save()
+      }
+
+      return response.ok({ message: 'Vous avez quitté la session avec succès.' })
+    } catch (error) {
+      console.error('Erreur lors de la validation ou de la requête :', error)
+      return response.badGateway({ message: error.message })
+    }
+  }
 }
+//   async leave({ request, auth, response }: HttpContext) {
+//     const userId = auth.user?.id
+
+//     if (!userId) {
+//       return response.unauthorized({ message: 'User not authenticated' })
+//     }
+
+//     try {
+//       // Validation des données entrantes
+//       const { sessionId } = await request.validateUsing(leaveSessionValidator)
+
+//       // On récupère la ligne qu'on veut modifié
+//       const sessionMember = await SessionMember.query()
+//         .where('sessionId', sessionId)
+//         .andWhere('userId', userId)
+//         .first()
+
+//       if (!sessionMember) {
+//         return response.notFound({ message: 'Vous ne faites pas partie de cette session.' })
+//       }
+
+//       await sessionMember.delete()
+
+//       return response.ok({ message: 'Vous avez quitté la session avec succès.' })
+//     } catch (error) {
+//       console.error('Erreur lors de la validation ou de la requête :', error)
+//       return response.badGateway({ message: error.message })
+//     }
+//   }
+// }

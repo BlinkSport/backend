@@ -2,7 +2,7 @@ import vine from '@vinejs/vine'
 
 export const storeSportValidator = vine.compile(
   vine.object({
-    sport_id: vine.number().positive(),
+    sport_ids: vine.array(vine.number().positive().withoutDecimals()).minLength(1).maxLength(5),
   })
 )
 

@@ -1,6 +1,7 @@
 import User from '#models/user'
 import app from '@adonisjs/core/services/app'
 import { registerUserValidator, loginUserValidator, updateUserValidator } from '#validators/auth'
+import { StreamChat } from 'stream-chat'
 import { uploadImageToS3 } from '#services/as3_service'
 import env from '#start/env'
 import type { HttpContext } from '@adonisjs/core/http'
@@ -8,6 +9,17 @@ import { cuid } from '@adonisjs/core/helpers'
 import { toPng } from 'jdenticon'
 import { unlink } from 'node:fs/promises'
 import { writeFile } from 'node:fs/promises' // Utilisez la version promise pour gérer les opérations de manière asynchrone
+
+// On récupère la clé et le secret de l'API stream
+const streamApiKey = env.get('STREAM_API_KEY')
+const streamApiSecret = env.get('STREAM_API_SECRET')
+
+if (!streamApiKey || !streamApiSecret) {
+  throw new Error('STREAM_API_KEY or STREAM_API_SECRET is not defined in environment variables.')
+}
+
+// Création d'une instance du client StreamChat avec les clés API
+const streamClient = StreamChat.getInstance(streamApiKey, streamApiSecret)
 
 export default class AuthController {
   // Inscription de l'utilisateur
@@ -22,15 +34,15 @@ export default class AuthController {
 
     // On récupère les informations validées
     const payload = await request.validateUsing(registerUserValidator)
-    const { profilImage, username } = payload
+    const { profilImage, firstname } = payload
 
     try {
       let imageUrl
 
       if (!profilImage) {
         // On génère une icône par défaut et l'enregistre
-        const png = toPng(username, 100)
-        const filename = `${username}_${cuid()}.png`
+        const png = toPng(firstname, 100)
+        const filename = `${firstname}_${cuid()}.png`
         const tempFilePath = `public/users/${filename}`
         // Enregistre l'image par défaut dans un fichier temporaire
         await writeFile(tempFilePath, png)
@@ -44,14 +56,38 @@ export default class AuthController {
         imageUrl = await uploadImageToS3(tempFilePath, bucketName, filename)
       }
 
+      // Log pour débogage
+      console.log('Payload received:', payload)
+
+      // Création du point géographique à partir des coordonnées latitude et longitude
+      if (!payload.latitude || !payload.longitude) {
+        return response.badRequest({ message: 'Latitude and longitude are required' })
+      }
+      const geoLocationPoint = `POINT(${payload.longitude} ${payload.latitude})`
+
+      // Log pour débogage
+      console.log('Geolocation point:', geoLocationPoint)
+
       // Création de l'utilisateur dans la base de données
-      await User.create({
+      const user = await User.create({
         ...payload,
         profilImage: imageUrl,
+        geoLocationPoint,
       })
 
+      // On enregistre l'utilisateur sur Stream
+      await streamClient.upsertUser({
+        id: user.id.toString(),
+        name: user.lastname,
+        firstname: user.firstname,
+        image: user.profilImage,
+      })
+
+      // Générer un token pour l'utilisateur sur Stream
+      const streamToken = streamClient.createToken(user.id.toString())
+
       // Réponse au client
-      return response.status(201).json({ message: 'User created' })
+      return response.status(201).json({ message: 'User created', streamToken: streamToken })
     } catch (error) {
       console.error('Failed to process registration:', error)
       return response.status(500).json({
@@ -62,27 +98,45 @@ export default class AuthController {
 
   // Login
   async handleLogin({ request, response }: HttpContext) {
-    // Récupération et validation des données de la requête avec le validateur de connexion
-    const { email, password } = await request.validateUsing(loginUserValidator)
-
     try {
-      // Vérification des informations d'identification de l'utilisateur + récupération de l'utilisateur si valide
-      const user = await User.verifyCredentials(email, password)
+      // Récupération et validation des données de la requête avec le validateur de connexion
+      const { email, password } = await request.validateUsing(loginUserValidator)
 
-      // Création d'un token d'accès pour les utilisateurs authentifié
+      let user
+      try {
+        // Vérification des informations d'identification de l'utilisateur + récupération de l'utilisateur si valide
+        user = await User.verifyCredentials(email, password)
+      } catch (error) {
+        if (error.code === 'E_INVALID_CREDENTIALS') {
+          return response.badRequest({ error: 'Email ou mot de passe incorrect' })
+        }
+        throw error // Relancer l'erreur si ce n'est pas une erreur d'identifiants invalides
+      }
+
+      // Création d'un token d'accès pour les utilisateurs authentifiés
       const token = await User.accessTokens.create(user)
+
+      // On récupère le token stream de l'utilisateur
+      const streamToken = streamClient.createToken(user.id.toString())
 
       // Réponse avec le token et les données utilisateur sérialisés
       return response.ok({
         token: token,
         ...user.serialize(),
+        streamToken,
+        streamApiKey: process.env.STREAM_API_KEY,
       })
     } catch (error) {
       // Réponse en cas d'erreur
       console.error('Login Error:', error)
-      return response.unauthorized({
-        error: 'Login failed',
-      })
+
+      // Si l'erreur est une instance de ValidationException, renvoyer des messages d'erreur détaillés
+      if (error.messages) {
+        return response.badRequest({ error: error.messages })
+      }
+
+      // Autres erreurs
+      return response.badRequest({ error: "Une erreur s'est produite lors de la connexion." })
     }
   }
 
@@ -95,6 +149,27 @@ export default class AuthController {
       return response.unauthorized({ error: 'User not authenticated' })
     }
   }
+  async checkEmail({ request, response }: HttpContext) {
+    const emailUserToCheck = request.input('email')
+    console.log('Email to check:', emailUserToCheck)
+
+    if (!emailUserToCheck) {
+      return response.badRequest({ error: 'Votre email est obligatoire' })
+    }
+
+    try {
+      const emailUserInDatabase = await User.findBy('email', emailUserToCheck)
+      if (emailUserInDatabase) {
+        return response.ok({ exists: true })
+      } else {
+        return response.ok({ exists: false })
+      }
+    } catch (error) {
+      console.error('Email check error:', error)
+      return response.internalServerError({ error: 'Failed to check email' })
+    }
+  }
+
   // Update
   async handleEditAccount({ auth, request, response }: HttpContext) {
     const bucketName = env.get('AWS_BUCKET_NAME')

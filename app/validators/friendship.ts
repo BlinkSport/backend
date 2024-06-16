@@ -1,5 +1,5 @@
 import vine from '@vinejs/vine'
-import Status from '../enums/status.js'
+import Status from '../enums/friendship.js'
 
 export const storeSportValidator = vine.compile(
   vine.object({

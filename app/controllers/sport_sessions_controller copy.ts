@@ -11,7 +11,6 @@ import { DateTime } from 'luxon'
 import Status from '../enums/sport_session.js'
 import UserStatus from '../enums/user.js'
 import db from '@adonisjs/lucid/services/db'
-import { log } from 'console'
 
 export default class SportSessionsController {
   /**
@@ -93,9 +92,16 @@ export default class SportSessionsController {
   }
 
   async filterSessions({ request, auth, response, db }) {
-    const user = auth.user!
-    const { sportIdGroup, distanceFilter } = request.body() // Récupération des données depuis le corps de la requête
+    const user = await auth.authenticate()
 
+    // Vérifier que les coordonnées géographiques de l'utilisateur sont définies
+    if (!user.geoLocationPoint) {
+      return response.badRequest({ message: 'User geolocation point is not defined' })
+    }
+
+    const { sportIdGroup, distanceFilter } = request.body()
+
+    // Validation des entrées
     if (!sportIdGroup || sportIdGroup.length === 0) {
       return response.badRequest({ message: 'Sport IDs are required' })
     }
@@ -106,33 +112,65 @@ export default class SportSessionsController {
 
     const now = DateTime.now().toFormat('yyyy-MM-dd HH:mm:ss')
 
-    console.log('User Geolocation Point:', user.geoLocationPoint)
-    if (!user.geoLocationPoint) {
-      return response.badRequest({ message: 'User geolocation point is not defined' })
-    }
-
     try {
-      const sportSessions = await db
-        .query()
-        .from('sport_sessions')
-        .whereIn('sportId', sportIdGroup)
-        .andWhere('status', Status.PENDING)
-        .andWhere('isPrivate', false)
-        .andWhere('start_date', '>=', now)
-        .andWhereRaw(
-          '(SELECT COUNT(*) FROM session_members WHERE session_members.session_id = sport_sessions.id) < sport_sessions.max_participants'
-        )
-        .select(
-          '*',
-          db.raw(
-            `ST_Distance(geo_location_point, ST_SetSRID(ST_MakePoint(?, ?), 4326)) as distance`,
-            [user.longitude, user.latitude] // Sécuriser l'insertion des valeurs de longitude et latitude
-          )
-        ) // Calcul de la distance
-        .having('distance', '<=', distanceFilter * 1000) // Convertir km en mètres
-        .orderBy('distance', 'asc')
+      // const sportSessions = await db.rawQuery(
+      //   'select * from sport_sessions where :column: = :value',
+      //   {
+      //     column: 'sport_sessions.geo_location_point',
+      //     value: 'ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326)) as distance',
+      //   },
+      //   {
+      //     column: 'sport_sessions.sport_id',
+      //     value: 'ANY(:sportIdGroup)',
+      //   },
+      //   {
+      //     column: 'sport_sessions.start_date',
+      //     value: `:now: <= sport_sessions.start_date`,
+      //   },
+      //   {
+      //     column: 'sport_sessions.status',
+      //     value: ':status',
+      //   },
+      //   {
+      //     column: 'sport_sessions.is_private',
+      //     value: false,
+      //   },
+      //   {
+      //     column: 'sport_sessions.status',
+      //     value: ':status',
+      //   },
 
-      return response.ok(sportSessions)
+        // `
+        //     SELECT 
+        //         sport_sessions.*, 
+        //         ST_Distance(
+        //             sport_sessions.geo_location_point, 
+        //             ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326)
+        //         ) as distance
+        //     FROM 
+        //         sport_sessions
+        //     WHERE
+        //         sport_sessions.sport_id = ANY(:sportIdGroup)
+        //         AND sport_sessions.status = :status
+        //         AND sport_sessions.is_private = false
+        //         AND sport_sessions.start_date >= :now
+        //         AND (SELECT COUNT(*) FROM session_members WHERE session_members.session_id = sport_sessions.id) < sport_sessions.max_participants
+        //     HAVING
+        //         distance <= :maxDistance
+        //     ORDER BY 
+        //         distance ASC
+        // `,
+        {
+          sportIdGroup,
+          status: Status.PENDING,
+          now,
+          maxDistance: distanceFilter * 1000, // Convertir km en mètres
+          longitude: user.geoLocationPoint.longitude,
+          latitude: user.geoLocationPoint.latitude,
+        }
+      )
+
+      return response.ok(sportSessions.rows)
     } catch (error) {
       console.error('Error fetching filtered sessions:', error)
       return response.badGateway({ message: error.message })
