@@ -1,4 +1,5 @@
 import { BaseSchema } from '@adonisjs/lucid/schema'
+import UserStatus from '../../app/enums/user.js'
 
 export default class extends BaseSchema {
   protected tableName = 'users'
@@ -7,16 +8,19 @@ export default class extends BaseSchema {
   async up() {
     this.schema.createTable(this.tableName, (table) => {
       table.increments('id').notNullable()
-      table.string('username').notNullable()
+      table.string('lastname').nullable()
+      table.string('firstname').nullable()
       table.string('email', 254).notNullable().unique()
       table.string('password').notNullable()
       table.string('phone_number').nullable()
+      table.date('birthdate').nullable()
       table.string('biography').nullable()
-      table.string('localisation').notNullable()
-      table.text('availability').nullable()
-      table.string('status').defaultTo('bénévole')
-      table.string('thumbnail').nullable()
-      //table.string('remember_me_token').notNullable()
+      table.string('location').nullable()
+      table.float('latitude').notNullable()
+      table.float('longitude').notNullable()
+      table.specificType('geo_location_point', 'geometry(Point, 4326)').nullable()
+      table.string('status').defaultTo(UserStatus.AVEUGLE)
+      table.string('profil_image').nullable()
 
       table.timestamp('created_at').notNullable()
       table.timestamp('updated_at').nullable()
