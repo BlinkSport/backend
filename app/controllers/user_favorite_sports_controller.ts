@@ -33,37 +33,55 @@ export default class UserFavoriteSportsController {
 
     const payload = await request.validateUsing(storeSportValidator)
     // Extrait la valeur du paramètre 'sport_id' de la chaîne de requête HTTP et l'affecte à la constante 'sportId'.
-    const sportId = payload.sport_id
+    const sportIds: number[] = payload.sport_ids
 
-    // On vérifie si l'utilisateur a déjà atteint la limite de 5 sports préférés
+    // Vérifiez que le nombre de sports soumis ne dépasse pas 5
+    if (sportIds.length > 5) {
+      return response.badRequest({ message: "Vous pouvez soumettre jusqu'à 5 sports à la fois." })
+    }
+
+    // Comptez le nombre de sports préférés existants pour l'utilisateur
     const lovedSportsCount = await SportLovedByUser.query()
       .where('user_id', user.id)
-      .count('* as total') // compte le nombre d'enregistrement qui respecte la condition where()
+      .count('* as total')
 
-    if (lovedSportsCount.length > 0 && lovedSportsCount.length >= 5) {
+    const currentCount = parseInt(lovedSportsCount[0].total, 10)
+
+    // Vérifiez que l'utilisateur n'a pas déjà atteint la limite de 5 sports
+    if (currentCount >= 5) {
       return response.badRequest({ message: 'Vous ne pouvez pas avoir plus de 5 sports préférés.' })
     }
 
-    // On vérifie si le sport est déjà aimé par l'utilisateur
-    const existingSport = await SportLovedByUser.query()
-      .where('user_id', user.id)
-      .andWhere('sport_id', sportId)
-      // Retourne le premier enregistrement qui correspond aux critères de la requête,
-      // ou null si aucun enregistrement correspondant n'est trouvé
-      .first()
-
-    // Si le sport est déjà aimé par l'user
-    if (existingSport) {
-      return response.badRequest({ message: 'Vous aimez déjà ce sport.' })
+    // Vérifiez que l'ajout des nouveaux sports ne dépasse pas la limite de 5
+    if (currentCount + sportIds.length > 5) {
+      return response.badRequest({
+        message: 'Vous ne pouvez ajouter que ' + (5 - currentCount) + ' sports supplémentaires.',
+      })
     }
 
-    // On ajoute le nouveau sport préféré
-    await SportLovedByUser.create({
-      userId: user.id, // Use user_id as it matches the database field
-      sportId: sportId,
-    })
+    // Vérifiez si les sports sont déjà aimés par l'utilisateur
+    const existingSports = await SportLovedByUser.query()
+      .where('user_id', user.id)
+      .whereIn('sport_id', sportIds)
 
-    return response.json({ message: 'Sport ajouté avec succès.' })
+    const existingSportIds = existingSports.map((sport) => sport.sportId)
+
+    // Filtrer les sports déjà aimés
+    const newSportIds = sportIds.filter((id) => !existingSportIds.includes(id))
+
+    if (newSportIds.length === 0) {
+      return response.badRequest({ message: 'Tous les sports soumis sont déjà aimés.' })
+    }
+
+    // Ajoutez les nouveaux sports préférés
+    await SportLovedByUser.createMany(
+      newSportIds.map((sportId) => ({
+        userId: user.id,
+        sportId: sportId,
+      }))
+    )
+
+    return response.json({ message: 'Sports ajoutés avec succès.' })
   }
 
   /**

@@ -6,7 +6,7 @@ import User from '#models/user'
 import Sport from '#models/sport'
 
 export default class SportLovedByUser extends BaseModel {
-  update(arg0: { sport_id: any }) {
+  update() {
     throw new Error('Method not implemented.')
   }
   @column({ isPrimary: true })
