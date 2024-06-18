@@ -113,41 +113,41 @@ export default class SportSessionsController {
     const now = DateTime.now().toFormat('yyyy-MM-dd HH:mm:ss')
 
     try {
-      // const sportSessions = await db.rawQuery(
-      //   'select * from sport_sessions where :column: = :value',
-      //   {
-      //     column: 'sport_sessions.geo_location_point',
-      //     value: 'ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326)) as distance',
-      //   },
-      //   {
-      //     column: 'sport_sessions.sport_id',
-      //     value: 'ANY(:sportIdGroup)',
-      //   },
-      //   {
-      //     column: 'sport_sessions.start_date',
-      //     value: `:now: <= sport_sessions.start_date`,
-      //   },
-      //   {
-      //     column: 'sport_sessions.status',
-      //     value: ':status',
-      //   },
-      //   {
-      //     column: 'sport_sessions.is_private',
-      //     value: false,
-      //   },
-      //   {
-      //     column: 'sport_sessions.status',
-      //     value: ':status',
-      //   },
+      const sportSessions = await db.rawQuery(
+        'select * from sport_sessions where :column: = :value',
+        {
+          column: 'sport_sessions.geo_location_point',
+          value: 'ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326)) as distance',
+        },
+        {
+          column: 'sport_sessions.sport_id',
+          value: 'ANY(:sportIdGroup)',
+        },
+        {
+          column: 'sport_sessions.start_date',
+          value: `:now: <= sport_sessions.start_date`,
+        },
+        {
+          column: 'sport_sessions.status',
+          value: ':status',
+        },
+        {
+          column: 'sport_sessions.is_private',
+          value: false,
+        },
+        {
+          column: 'sport_sessions.status',
+          value: ':status',
+        },
 
         // `
-        //     SELECT 
-        //         sport_sessions.*, 
+        //     SELECT
+        //         sport_sessions.*,
         //         ST_Distance(
-        //             sport_sessions.geo_location_point, 
+        //             sport_sessions.geo_location_point,
         //             ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326)
         //         ) as distance
-        //     FROM 
+        //     FROM
         //         sport_sessions
         //     WHERE
         //         sport_sessions.sport_id = ANY(:sportIdGroup)
@@ -157,7 +157,7 @@ export default class SportSessionsController {
         //         AND (SELECT COUNT(*) FROM session_members WHERE session_members.session_id = sport_sessions.id) < sport_sessions.max_participants
         //     HAVING
         //         distance <= :maxDistance
-        //     ORDER BY 
+        //     ORDER BY
         //         distance ASC
         // `,
         {
