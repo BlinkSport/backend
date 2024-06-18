@@ -45,6 +45,10 @@ export const updateSportSessionValidator = vine.compile(
 export const filterSessionsValidator = vine.compile(
   vine.object({
     //sportIds: vine.number().positive().withoutDecimals().optional(),
-    distanceFilter: vine.number(), // assuming distance is in km, max 50 km for filtering
+    // distanceFilter: vine.number(), // assuming distance is in km, max 50 km for filtering
+    sportIdGroup: vine.array(vine.number().positive().withoutDecimals()).minLength(1),
+    latitude: vine.number().min(-90).max(90),
+    longitude: vine.number().min(-180).max(180),
+    distanceFilter: vine.number(),
   })
 )
