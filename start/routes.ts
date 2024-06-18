@@ -53,7 +53,7 @@ router
 // Route pour gérer les sessions de sports
 router
   .group(() => {
-    router.post('get', [SportSessionsController, 'filterSessions'])
+    router.post('search', [SportSessionsController, 'filterSessions'])
     router.get('last-sport-session', [SportSessionsController, 'getLastCreatedSession'])
     router.post('create', [SportSessionsController, 'store'])
     router.put('/update', [SportSessionsController, 'update'])
