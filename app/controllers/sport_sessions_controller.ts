@@ -10,8 +10,6 @@ import Sport from '#models/sport'
 import { DateTime } from 'luxon'
 import Status from '../enums/sport_session.js'
 import UserStatus from '../enums/user.js'
-import db from '@adonisjs/lucid/services/db'
-import { log } from 'console'
 
 export default class SportSessionsController {
   /**
@@ -92,9 +90,13 @@ export default class SportSessionsController {
     }
   }
 
-  async filterSessions({ request, auth, response, db }) {
-    const user = auth.user!
-    const { sportIdGroup, distanceFilter } = request.body() // Récupération des données depuis le corps de la requête
+  async filterSessions({ request, auth, response }) {
+    const payload = await request.validateUsing(filterSessionsValidator)
+    const { latitude, longitude, sportIdGroup, distanceFilter } = payload
+
+    // Utilisez des valeurs par défaut si l'utilisateur ne donne pas sa localisation
+    const userLatitude = latitude ?? -34.397 // Valeur par défaut
+    const userLongitude = longitude ?? 151.644 // Valeur par défaut
 
     if (!sportIdGroup || sportIdGroup.length === 0) {
       return response.badRequest({ message: 'Sport IDs are required' })
@@ -106,31 +108,26 @@ export default class SportSessionsController {
 
     const now = DateTime.now().toFormat('yyyy-MM-dd HH:mm:ss')
 
-    console.log('User Geolocation Point:', user.geoLocationPoint)
-    if (!user.geoLocationPoint) {
-      return response.badRequest({ message: 'User geolocation point is not defined' })
-    }
-
     try {
-      const sportSessions = await db
-        .query()
-        .from('sport_sessions')
+      let sportSessions = await SportSession.query()
         .whereIn('sportId', sportIdGroup)
         .andWhere('status', Status.PENDING)
         .andWhere('isPrivate', false)
         .andWhere('start_date', '>=', now)
         .andWhereRaw(
-          '(SELECT COUNT(*) FROM session_members WHERE session_members.session_id = sport_sessions.id) < sport_sessions.max_participants'
+          `(SELECT COUNT(*) FROM session_members WHERE session_members.session_id = sport_sessions.id) < sport_sessions.max_participants`
         )
-        .select(
-          '*',
-          db.raw(
-            `ST_Distance(geo_location_point, ST_SetSRID(ST_MakePoint(?, ?), 4326)) as distance`,
-            [user.longitude, user.latitude] // Sécuriser l'insertion des valeurs de longitude et latitude
-          )
-        ) // Calcul de la distance
-        .having('distance', '<=', distanceFilter * 1000) // Convertir km en mètres
-        .orderBy('distance', 'asc')
+        .andWhereRaw(
+          `ST_Distance(geo_location_point, ST_SetSRID(ST_MakePoint(?,?,4326),?)) <=?`,
+          [userLongitude, userLatitude, 4326, distanceFilter * 1000] // Convertissez la distanceFilter en mètres
+        )
+        .as('*') // Assurez-vous de retourner tous les champs
+
+      // Convertir la distance en kilomètres
+      sportSessions = sportSessions.map((session) => ({
+        ...session,
+        distance: session.distance / 100000, // Convertir la distance en mètres en kilomètres
+      }))
 
       return response.ok(sportSessions)
     } catch (error) {

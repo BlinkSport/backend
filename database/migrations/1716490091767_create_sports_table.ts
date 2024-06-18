@@ -14,9 +14,16 @@ export default class extends BaseSchema {
     this.defer(async (db) => {
       await db.table(this.tableName).insert([
         { id: 1, sport_name: 'Football', created_at: new Date(), updated_at: new Date() },
-        { id: 2, sport_name: 'Footing', created_at: new Date(), updated_at: new Date() },
-        { id: 3, sport_name: 'Musculation', created_at: new Date(), updated_at: new Date() },
-        { id: 4, sport_name: 'Basket', created_at: new Date(), updated_at: new Date() },
+        { id: 2, sport_name: 'Course', created_at: new Date(), updated_at: new Date() },
+        { id: 3, sport_name: 'Cyclysme', created_at: new Date(), updated_at: new Date() },
+        { id: 4, sport_name: 'Randonnée', created_at: new Date(), updated_at: new Date() },
+        { id: 5, sport_name: 'Yoga', created_at: new Date(), updated_at: new Date() },
+        { id: 6, sport_name: 'Musculation', created_at: new Date(), updated_at: new Date() },
+        { id: 7, sport_name: 'Natation', created_at: new Date(), updated_at: new Date() },
+        { id: 8, sport_name: 'Combat', created_at: new Date(), updated_at: new Date() },
+        { id: 9, sport_name: 'Voile', created_at: new Date(), updated_at: new Date() },
+        { id: 10, sport_name: 'Ping Pong', created_at: new Date(), updated_at: new Date() },
+        { id: 11, sport_name: 'Salle de sport', created_at: new Date(), updated_at: new Date() },
       ])
     })
   }
