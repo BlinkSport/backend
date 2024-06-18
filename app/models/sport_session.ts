@@ -1,5 +1,5 @@
 import { DateTime } from 'luxon'
-import { BaseModel, column, belongsTo, hasMany } from '@adonisjs/lucid/orm'
+import { BaseModel, column, belongsTo, hasMany, afterFetch } from '@adonisjs/lucid/orm'
 import type { BelongsTo, HasMany } from '@adonisjs/lucid/types/relations'
 
 import Sport from '#models/sport'
@@ -60,4 +60,12 @@ export default class SportSession extends BaseModel {
 
   @hasMany(() => SessionMember, { foreignKey: 'sessionId' })
   declare members: HasMany<typeof SessionMember>
+
+  // Hook afterFetch pour charger les membres
+  @afterFetch()
+  static async afterFetchHook(sessions: SportSession[]) {
+    for (let session of sessions) {
+      await session.load('members')
+    }
+  }
 }
