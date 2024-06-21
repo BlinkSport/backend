@@ -49,4 +49,4 @@ Visitez http://localhost:3333/ dans votre navigateur pour accéder à l'applicat
 - database/migrations - Fichiers de migration pour la base de données.
 
 ## Contact
-- Pour plus d'informations, contactez Peter Binate(https://github.com/Peter-Binate) et Faissel Friouchen(https://github.com/FicelloScript).
+- Pour plus d'informations, contactez Peter Binate(https://github.com/Peter-Binate).
