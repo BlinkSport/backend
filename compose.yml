@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: blinksport
+    ports:
+      - '${APP_PORT:-3332}:3332'
+    environment:
+      APP_KEY: '${APP_KEY}'
+      NODE_ENV: '${NODE_ENV:-development}'
+      DB_CONNECTION: pg
+      DB_HOST: '${DB_HOST}'
+      DB_PORT: '${DB_PORT:-5432}'
+      DB_USER: '${DB_USER}'
+      DB_PASSWORD: '${DB_PASSWORD}'
+      DB_DATABASE: '${DB_DATABASE}'
+    volumes:
+      - '.:/app'
+      - 'node_modules:/app/node_modules'
+      - 'uploads:/app/uploads'
+      - 'logs:/app/logs'
+    networks:
+      - sail
+
+networks:
+  sail:
+    driver: bridge
+
+volumes:
+  node_modules:
+  uploads:
+  logs:
