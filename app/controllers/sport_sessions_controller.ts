@@ -30,7 +30,7 @@ export default class SportSessionsController {
         .whereRaw(
           '(SELECT COUNT(*) FROM session_members WHERE session_members.session_id = sport_sessions.id) < sport_sessions.max_participants'
         )
-        .whereRaw('start_date > ?', [now]) // Compare directly with the timestamp
+        .whereRaw('start_date > ?', [now])
 
       // Ajouter condition pour onlyBlindOrVisuallyImpaired en fonction du statut de l'utilisateur
       if (user.status === UserStatus.VALIDE) {
@@ -90,7 +90,7 @@ export default class SportSessionsController {
     }
   }
 
-  async filterSessions({ request, auth, response }) {
+  async filterSessions({ request, response }) {
     const payload = await request.validateUsing(filterSessionsValidator)
     const { latitude, longitude, sportIdGroup, distanceFilter } = payload
 
@@ -144,27 +144,31 @@ export default class SportSessionsController {
       const user = auth.user!
       const payload = await request.validateUsing(storeSportSessionValidator)
 
-      // Vérifier si le sport existe
+      // On vérifie si le sport existe
       const sport = await Sport.findOrFail(payload.sportId)
       if (!sport) {
         return response.badRequest({ message: 'Sport non trouvé' })
       }
 
-      // Validation de la latitude et longitude
+      //  On vérifie si la latitude et la longitude existent
       if (payload.latitude === null || payload.longitude === null) {
         return response.badRequest({ message: 'Votre adresse invalide' })
       }
 
-      // Construire un point géographique à partir des coordonnées
+      // On construit un point géographique à partir des coordonnées
       const geoLocationPoint = `POINT(${payload.longitude} ${payload.latitude})`
 
-      // Convertir startDate en DateTime de Luxon
-      if (!payload.startDate) {
-        return response.badRequest({ message: 'Date de début est requise' })
+      // On vérifie que startDate est une chaîne de caractères non-undefined
+      if (typeof payload.startDate !== 'string') {
+        return response.badRequest({
+          message: 'La date de début doit être une chaîne de caractères ISO 8601.',
+        })
       }
+
+      // On convertit la date de début en objet DateTime de Luxon afin de pouvoir effectuer des opérations avec
       const startDate = DateTime.fromISO(payload.startDate)
 
-      // Vérifier que la date de début est dans le futur
+      // On vérifie que la date de début est dans le futur
       const now = DateTime.now()
       if (startDate < now) {
         return response.badRequest({ message: 'La date de session doit être actuelle ou futur.' })
@@ -183,7 +187,7 @@ export default class SportSessionsController {
         geoLocationPoint,
       })
 
-      // Ajouter l'utilisateur comme membre administrateur de la session
+      // On ajoute l'utilisateur comme membre administrateur de la session
       await SessionMember.create({
         sessionId: sportSession.id,
         userId: user.id,
@@ -201,7 +205,7 @@ export default class SportSessionsController {
   /**
    * Update de la session de sport
    */
-  async update({ request, auth, response, bouncer }: HttpContext) {
+  async update({ request, auth, response }: HttpContext) {
     try {
       const user = auth.user!
       const payload = await request.validateUsing(updateSportSessionValidator)

@@ -4,12 +4,11 @@ import Level from '../enums/difficulty_level.js'
 
 export const storeSportSessionValidator = vine.compile(
   vine.object({
-    // startDate: vine
-    //   .date({
-    //     formats: ['YYYY/DD/MM', 'x'],
-    //   })
-    //   .after('yesterday'),
-    startDate: vine.date().optional(),
+    startDate: vine
+      .date({
+        formats: ['YYYY/DD/MM', 'x'],
+      })
+      .after('yesterday'),
     sportId: vine.number().positive(),
     maxParticipants: vine.number().withoutDecimals().positive(),
     onlyBlindOrVisuallyImpaired: vine.boolean().optional(),

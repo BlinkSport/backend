@@ -11,7 +11,7 @@ export default class SportSession extends BaseModel {
   declare id: number
 
   @column()
-  declare startDate: DateTime
+  declare startDate: Date
 
   @column()
   declare sportId: number

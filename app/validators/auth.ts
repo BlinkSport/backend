@@ -73,12 +73,9 @@ const registerSchema = vine.object({
   latitude: vine.number().min(-90).max(90),
   longitude: vine.number().min(-180).max(180),
   availability: vine.string().escape().optional(),
-  status: vine.enum([
-    UserStatus.AVEUGLE,
-    UserStatus.MALVOYANT,
-    UserStatus.VALIDE,
-    UserStatus.PARENT,
-  ]),
+  status: vine
+    .enum([UserStatus.AVEUGLE, UserStatus.MALVOYANT, UserStatus.VALIDE, UserStatus.PARENT])
+    .optional(),
   profilImage: vine.file({ extnames: ['jpg', 'png'], size: '10mb' }).optional(),
 })
 
